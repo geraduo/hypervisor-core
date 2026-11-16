@@ -1,5 +1,10 @@
 build/
+build-*/
 out/
+dist/
+node_modules/
+.upstream-v031/
+.cmake-env/
 .vs/
 .vscode/
 *.user
@@ -8,3 +13,7 @@ out/
 *.ilk
 *.obj
 *.exe
+driver/bin/
+driver/obj/
+driver/*.cat
+driver/*.pdb

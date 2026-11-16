@@ -16,7 +16,13 @@ enum class Status {
     InitializationFailed,
     ShutdownFailed,
     InternalError,
-    Unsupported
+    Unsupported,
+    DriverNotFound,
+    DeviceNotConnected,
+    ProtocolMismatch,
+    BufferTooSmall,
+    InvalidResponse,
+    TransportError
 };
 
 struct Result {

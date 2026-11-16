@@ -1,0 +1,53 @@
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider=%ProviderName%
+DriverVer=06/02/2026,0.4.0.0
+CatalogFile=GeraduoDriver.cat
+PnpLockdown=1
+
+[Manufacturer]
+%ProviderName%=GeraduoModels,NTamd64.10.0
+
+[GeraduoModels.NTamd64.10.0]
+%DeviceDescription%=GeraduoDevice_Install,ROOT\GERADUOHYPERVISOR
+
+[GeraduoDevice_Install.NT]
+CopyFiles=GeraduoDriver_CopyFiles
+
+[GeraduoDevice_Install.NT.HW]
+AddReg=GeraduoDevice_Security
+
+[GeraduoDevice_Security]
+HKR,,DeviceType,0x00010001,0x00008000
+HKR,,DeviceCharacteristics,0x00010001,0x00000100
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GR;;;BA)"
+
+[GeraduoDevice_Install.NT.Services]
+AddService=GeraduoDriver,0x00000002,GeraduoDriver_Service
+
+[GeraduoDriver_Service]
+DisplayName=%ServiceDescription%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\GeraduoDriver.sys
+
+[DestinationDirs]
+GeraduoDriver_CopyFiles=12
+
+[GeraduoDriver_CopyFiles]
+GeraduoDriver.sys
+
+[SourceDisksNames]
+1=%DiskName%,,,
+
+[SourceDisksFiles]
+GeraduoDriver.sys=1
+
+[Strings]
+ProviderName="Geraduo"
+DeviceDescription="Geraduo Hypervisor Core diagnostic interface"
+ServiceDescription="Geraduo Windows platform diagnostics"
+DiskName="Geraduo diagnostic driver package"
