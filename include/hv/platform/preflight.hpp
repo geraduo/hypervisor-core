@@ -20,7 +20,8 @@ enum class PreflightVerdict {
     UnsupportedPlatform,        // Not x86, unsupported vendor (e.g. AMD: SVM backend not implemented),
                                 // or required CPUID leaves are missing.
     VmxNotReported,             // Intel CPU, but CPUID.01H:ECX[5] (VMX) is clear.
-    HypervisorConflict,         // CPUID.01H:ECX[31] set: another hypervisor is already present.
+    HypervisorPresentReviewRequired, // CPUID.01H:ECX[31] set; this is not proof of a conflict.
+    HypervisorConflict = HypervisorPresentReviewRequired, // Compatibility alias; use the name above.
     PendingKernelVerification   // CPUID is consistent with VMX; kernel-mode checks still required.
 };
 
@@ -36,6 +37,8 @@ struct PreflightReport {
     CpuVendor cpu_vendor{CpuVendor::Unknown};
     std::string cpu_vendor_string;
     std::uint32_t max_basic_leaf{};
+    bool extended_leaf0_read{false};
+    std::uint32_t max_extended_leaf{};
 
     bool leaf1_read{false};
     std::uint32_t family{};      // display family (extended family folded in)
@@ -59,8 +62,8 @@ struct PreflightReport {
 };
 
 // Purpose: evaluate what CPUID alone can say about VT-x suitability.
-// Responsibility: read leaves 0, 1, 0x40000000 (only if ECX[31] set) and 0x80000001 (AMD/Hygon
-// only), build a PreflightReport. Never executes privileged instructions.
+// Responsibility: read leaves 0 and 1 when advertised, 0x40000000 only when ECX[31] is set, and
+// first read 0x80000000 before 0x80000001 on AMD/Hygon. Never executes privileged instructions.
 // Returns an error Result only when CPUID probing itself failed (verdict == ProbeFailed).
 // A non-ready determination (e.g. VmxNotReported) is a successful Result with a verdict.
 [[nodiscard]] Result RunPlatformPreflight(ICpuidProvider& cpuid, PreflightReport& out);

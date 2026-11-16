@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(GeraduoHypervisorCore VERSION 0.3.0 LANGUAGES CXX)
+project(GeraduoHypervisorCore VERSION 0.3.1 LANGUAGES CXX)
 
 option(HV_BUILD_TESTS "Build unit tests" ON)
 option(HV_BUILD_DEMO "Build the architecture demo" ON)

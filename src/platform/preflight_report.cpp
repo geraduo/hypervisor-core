@@ -1,5 +1,6 @@
 #include "hv/platform/preflight.hpp"
 #include <cstdio>
+#include <iomanip>
 #include <sstream>
 
 namespace hv {
@@ -45,7 +46,7 @@ const char* ToString(PreflightVerdict v) noexcept {
     case PreflightVerdict::ProbeFailed: return "ProbeFailed";
     case PreflightVerdict::UnsupportedPlatform: return "UnsupportedPlatform";
     case PreflightVerdict::VmxNotReported: return "VmxNotReported";
-    case PreflightVerdict::HypervisorConflict: return "HypervisorConflict";
+    case PreflightVerdict::HypervisorPresentReviewRequired: return "HypervisorPresentReviewRequired";
     case PreflightVerdict::PendingKernelVerification: return "PendingKernelVerification";
     }
     return "ProbeFailed";
@@ -58,6 +59,10 @@ std::string FormatReportText(const PreflightReport& r) {
     out << "Summary: " << r.summary << '\n';
     out << "CPU vendor: " << (r.cpu_vendor_string.empty() ? "(unread)" : r.cpu_vendor_string)
         << " [" << ToString(r.cpu_vendor) << "], max basic leaf " << r.max_basic_leaf << '\n';
+    if (r.extended_leaf0_read)
+        out << "Max extended CPUID leaf: 0x" << std::hex << r.max_extended_leaf << std::dec << '\n';
+    else
+        out << "Max extended CPUID leaf: not checked\n";
     if (r.leaf1_read)
         out << "CPU signature: family " << r.family << ", model " << r.model
             << ", stepping " << r.stepping << '\n';
@@ -79,7 +84,9 @@ std::string JsonEscape(const std::string& text) {
         switch (ch) {
         case '"': result += "\\\""; break;
         case '\\': result += "\\\\"; break;
+        case '\b': result += "\\b"; break;
         case '\n': result += "\\n"; break;
+        case '\f': result += "\\f"; break;
         case '\r': result += "\\r"; break;
         case '\t': result += "\\t"; break;
         default:
@@ -107,6 +114,8 @@ std::string FormatReportJson(const PreflightReport& r) {
       << ToString(r.cpu_vendor) << "\", \"max_basic_leaf\": " << r.max_basic_leaf
       << ", \"family\": " << r.family << ", \"model\": " << r.model
       << ", \"stepping\": " << r.stepping << "},\n";
+    o << "  \"extended_cpuid\": {\"leaf0_read\": " << B(r.extended_leaf0_read)
+      << ", \"max_leaf\": " << r.max_extended_leaf << "},\n";
     o << "  \"vmx_cpuid_bit\": " << B(r.vmx_cpuid_bit) << ",\n";
     o << "  \"hypervisor\": {\"present\": " << B(r.hypervisor_present_bit) << ", \"vendor\": \""
       << JsonEscape(r.hypervisor_vendor_string) << "\", \"kind\": \"" << ToString(r.hypervisor_vendor)

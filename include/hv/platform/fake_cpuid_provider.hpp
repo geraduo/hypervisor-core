@@ -1,5 +1,6 @@
 #pragma once
 #include "hv/platform/cpuid.hpp"
+#include <cstddef>
 #include <map>
 #include <string>
 #include <utility>
@@ -15,6 +16,9 @@ public:
     void Set(std::uint32_t leaf, std::uint32_t subleaf, CpuidRegisters regs) {
         leaves_[{leaf, subleaf}] = regs;
     }
+    void FailOn(std::uint32_t leaf, std::uint32_t subleaf, Status status, std::string message) {
+        failures_[{leaf, subleaf}] = {status, std::move(message)};
+    }
     void FailAllWith(Status status, std::string message) {
         fail_all_ = true; fail_status_ = status; fail_message_ = std::move(message);
     }
@@ -23,7 +27,11 @@ public:
                                CpuidRegisters& out) override {
         calls_.emplace_back(leaf, subleaf);
         if (fail_all_) return Result::Error(fail_status_, fail_message_);
-        const auto it = leaves_.find({leaf, subleaf});
+        const auto key = std::make_pair(leaf, subleaf);
+        const auto failure = failures_.find(key);
+        if (failure != failures_.end())
+            return Result::Error(failure->second.first, failure->second.second);
+        const auto it = leaves_.find(key);
         if (it == leaves_.end()) return Result::Error(Status::NotFound, "fake leaf not configured");
         out = it->second;
         return Result::Ok();
@@ -58,6 +66,7 @@ private:
     }
 
     std::map<std::pair<std::uint32_t, std::uint32_t>, CpuidRegisters> leaves_;
+    std::map<std::pair<std::uint32_t, std::uint32_t>, std::pair<Status, std::string>> failures_;
     std::vector<std::pair<std::uint32_t, std::uint32_t>> calls_;
     bool fail_all_{false};
     Status fail_status_{Status::InternalError};
