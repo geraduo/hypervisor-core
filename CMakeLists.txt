@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
-project(GeraduoHypervisorCore VERSION 0.4.0 LANGUAGES CXX)
+project(GeraduoHypervisorCore VERSION 0.5.0 LANGUAGES CXX)
 
 option(HV_BUILD_TESTS "Build unit tests" ON)
 option(HV_BUILD_DEMO "Build the architecture demo" ON)
 option(HV_BUILD_LAUNCHER "Build the host process launcher" ON)
 option(HV_BUILD_PREFLIGHT "Build the hv_preflight CPUID report tool" ON)
 option(HV_BUILD_PLATFORM_DIAGNOSTICS "Build the Windows platform diagnostics tool" ON)
+option(HV_BUILD_VMX_DIAGNOSTICS "Build the VMX diagnostics tool" ON)
 option(HV_BUILD_WDK_DRIVER "Expose the separate WDK driver build target" OFF)
 
 function(hv_set_warnings target)
@@ -33,10 +34,20 @@ add_library(hv_core
     src/platform/windows/platform_compatibility_manager.cpp
     src/platform/windows/kernel_driver_interface.cpp
     src/platform/windows/driver_diagnostics.cpp
+    # v0.5.0: Intel VT-x readiness infrastructure (diagnostic only; no VMXON/VMCS)
+    src/virtualization/intel/vmx_capability_manager.cpp
+    src/virtualization/intel/native_processor_cpuid.cpp
+    src/virtualization/intel/vmx_readiness_manager.cpp
+    src/virtualization/intel/vmx_lifecycle_controller.cpp
+    src/virtualization/intel/vmx_diagnostics.cpp
+    src/virtualization/intel/intel_virtualization_backend.cpp
 )
 target_include_directories(hv_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(hv_core PUBLIC cxx_std_20)
 hv_set_warnings(hv_core)
+
+find_package(Threads REQUIRED)
+target_link_libraries(hv_core PUBLIC Threads::Threads)
 
 if(WIN32)
     target_link_libraries(hv_core PRIVATE Advapi32 Setupapi)
@@ -61,6 +72,12 @@ if(HV_BUILD_PLATFORM_DIAGNOSTICS)
     add_executable(hv_platform_diagnostics examples/platform_diagnostics.cpp)
     target_link_libraries(hv_platform_diagnostics PRIVATE hv_core)
     hv_set_warnings(hv_platform_diagnostics)
+endif()
+
+if(HV_BUILD_VMX_DIAGNOSTICS)
+    add_executable(hv_vmx_diagnostics examples/vmx_diagnostics.cpp)
+    target_link_libraries(hv_vmx_diagnostics PRIVATE hv_core)
+    hv_set_warnings(hv_vmx_diagnostics)
 endif()
 
 if(HV_BUILD_WDK_DRIVER)
@@ -89,4 +106,20 @@ if(HV_BUILD_TESTS)
     target_link_libraries(hv_platform_compatibility_tests PRIVATE hv_core)
     hv_set_warnings(hv_platform_compatibility_tests)
     add_test(NAME hv_platform_compatibility_tests COMMAND hv_platform_compatibility_tests)
+
+    # v0.5.0 VMX infrastructure tests. They run on fakes: no VT-x, driver or Windows is required.
+    add_executable(hv_vmx_capability_tests tests/test_vmx_capabilities.cpp)
+    target_link_libraries(hv_vmx_capability_tests PRIVATE hv_core)
+    hv_set_warnings(hv_vmx_capability_tests)
+    add_test(NAME hv_vmx_capability_tests COMMAND hv_vmx_capability_tests)
+
+    add_executable(hv_vmx_readiness_tests tests/test_vmx_readiness.cpp)
+    target_link_libraries(hv_vmx_readiness_tests PRIVATE hv_core)
+    hv_set_warnings(hv_vmx_readiness_tests)
+    add_test(NAME hv_vmx_readiness_tests COMMAND hv_vmx_readiness_tests)
+
+    add_executable(hv_vmx_lifecycle_tests tests/test_vmx_lifecycle.cpp)
+    target_link_libraries(hv_vmx_lifecycle_tests PRIVATE hv_core)
+    hv_set_warnings(hv_vmx_lifecycle_tests)
+    add_test(NAME hv_vmx_lifecycle_tests COMMAND hv_vmx_lifecycle_tests)
 endif()

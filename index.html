@@ -1,14 +1,207 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0a0f13" />
-    <meta name="description" content="Geraduo Hypervisor Core v0.4.0 Windows platform backend and diagnostic protocol." />
-    <title>Geraduo Hypervisor Core | Platform Diagnostics</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geraduo Hypervisor Core v0.5.0 — VMX Readiness overlay</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+  body { background:#0b0f17; }
+  pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; }
+  .scroll::-webkit-scrollbar { width:10px; height:10px; }
+  .scroll::-webkit-scrollbar-thumb { background:#2a3447; border-radius:6px; }
+  .file-btn[aria-current="true"] { background:#1b2740; color:#fff; border-color:#3b82f6; }
+</style>
+</head>
+<body class="text-slate-200 min-h-screen">
+
+<header class="border-b border-slate-800 bg-[#0d1320]">
+  <div class="max-w-7xl mx-auto px-5 py-5 flex flex-wrap items-center gap-4 justify-between">
+    <div>
+      <p class="text-xs tracking-widest text-sky-400 font-semibold">GERADUO HYPERVISOR CORE</p>
+      <h1 class="text-2xl font-bold text-white">v0.5.0 — Intel VT-x virtualization foundation</h1>
+      <p class="text-sm text-slate-400 mt-1">Оверлей поверх ветки <code class="text-slate-300">dev</code> (v0.4.0). Диагностика и управление состоянием. Гипервизор <b>не запускается</b>.</p>
+    </div>
+    <div class="flex gap-2">
+      <button id="zipBtn" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold transition">Скачать ZIP (v0.5.0 overlay)</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-5 py-6 grid gap-6">
+
+  <section class="grid md:grid-cols-3 gap-4">
+    <div class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 md:col-span-2">
+      <h2 class="font-semibold text-amber-300 mb-1">Статус проверки — честно</h2>
+      <ul class="text-sm text-amber-100/90 list-disc ml-5 space-y-1">
+        <li>Код написан по реальным заголовкам v0.4.0 из <code>dev</code>, но <b>не компилировался и не запускался</b>: в этой среде нет компилятора, CMake и Windows.</li>
+        <li>Результатов <code>ctest</code> нет, и я их не выдумываю. Команды для запуска ниже, ожидаемые результаты описаны в тестах.</li>
+        <li>ZIP содержит только файлы v0.5.0. Распакуйте его поверх репозитория: нужны существующие <code>tests/test_support.hpp</code> и <code>tests/fakes/fake_windows_platform.hpp</code>.</li>
+        <li><code>CMakeLists.txt</code> и <code>README.md</code> заменяются целиком. README восстановлен по отрендеренной странице GitHub, поэтому сделайте diff перед слиянием.</li>
+      </ul>
+    </div>
+    <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+      <h2 class="font-semibold text-white mb-2">Сборка и тесты</h2>
+      <pre class="scroll overflow-x-auto text-[12px] text-emerald-300"><code>cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Release
+ctest --test-dir build -C Release --output-on-failure
+.\build\Release\hv_vmx_diagnostics.exe --json</code></pre>
+    </div>
+  </section>
+
+  <section class="grid md:grid-cols-4 gap-3 text-sm">
+    <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-3"><p class="text-slate-400 text-xs">Состояния</p><p class="font-semibold">Uninitialized → CheckingCapabilities → NotSupported | Blocked | ReadyForReview | Failed → Stopped</p></div>
+    <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-3"><p class="text-slate-400 text-xs">Нет состояния «Ready/Running»</p><p class="font-semibold">Лучший исход — ReadyForReview. VMXON, VMCS, VM-entry не выполняются.</p></div>
+    <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-3"><p class="text-slate-400 text-xs">Мультипроцессор</p><p class="font-semibold">ProcessorDiagnostic на каждый LP. Непроверенный остаётся NOT_CHECKED.</p></div>
+    <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-3"><p class="text-slate-400 text-xs">Драйвер</p><p class="font-semibold">Без изменений: v1, только чтение, без доступа к памяти.</p></div>
+  </section>
+
+  <section class="grid lg:grid-cols-[300px_1fr] gap-4">
+    <aside class="rounded-xl border border-slate-800 bg-[#0d1320] p-3 max-h-[75vh] overflow-y-auto scroll">
+      <div id="fileList" class="space-y-4"></div>
+    </aside>
+    <div class="rounded-xl border border-slate-800 bg-[#0d1320] min-w-0">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-slate-800">
+        <div class="min-w-0">
+          <p id="filePath" class="font-mono text-sm text-sky-300 truncate">Выберите файл</p>
+          <p id="fileMeta" class="text-xs text-slate-500"></p>
+        </div>
+        <div class="flex gap-2">
+          <button id="copyBtn" class="px-3 py-1.5 text-xs rounded-md border border-slate-700 hover:border-sky-500 transition">Копировать</button>
+          <button id="dlBtn" class="px-3 py-1.5 text-xs rounded-md border border-slate-700 hover:border-sky-500 transition">Скачать файл</button>
+        </div>
+      </div>
+      <pre class="scroll overflow-auto max-h-[68vh] p-4"><code id="code" class="text-slate-300 whitespace-pre"></code></pre>
+    </div>
+  </section>
+
+  <p id="status" class="text-xs text-slate-500"></p>
+</main>
+
+<script>
+const GROUPS = [
+  ["Заголовки: include/hv/virtualization", [
+    "include/hv/virtualization/vmx_status.hpp",
+    "include/hv/virtualization/vmx_capability_manager.hpp",
+    "include/hv/virtualization/vmx_readiness_manager.hpp",
+    "include/hv/virtualization/vmx_lifecycle_controller.hpp",
+    "include/hv/virtualization/vmx_diagnostics.hpp",
+    "include/hv/virtualization/virtualization_backend.hpp"]],
+  ["Реализация: src/virtualization/intel", [
+    "src/virtualization/intel/vmx_capability_manager.cpp",
+    "src/virtualization/intel/native_processor_cpuid.cpp",
+    "src/virtualization/intel/vmx_readiness_manager.cpp",
+    "src/virtualization/intel/vmx_lifecycle_controller.cpp",
+    "src/virtualization/intel/vmx_diagnostics.cpp",
+    "src/virtualization/intel/intel_virtualization_backend.cpp"]],
+  ["Утилита", ["examples/vmx_diagnostics.cpp"]],
+  ["Тесты и fake-провайдеры", [
+    "tests/fakes/fake_vmx.hpp",
+    "tests/test_vmx_capabilities.cpp",
+    "tests/test_vmx_readiness.cpp",
+    "tests/test_vmx_lifecycle.cpp"]],
+  ["Сборка", ["CMakeLists.txt"]],
+  ["Документация", [
+    "README.md", "CHANGELOG.md",
+    "docs/VMX_READINESS.md", "docs/DRIVER_INTEGRATION.md", "docs/BUILD.md"]]
+];
+const ALL = GROUPS.flatMap(g => g[1]);
+const cache = new Map();
+const $ = id => document.getElementById(id);
+let current = null;
+
+async function load(path) {
+  if (cache.has(path)) return cache.get(path);
+  const res = await fetch(path, { cache: "no-store" });
+  if (!res.ok) throw new Error(path + " → HTTP " + res.status);
+  const text = await res.text();
+  cache.set(path, text);
+  return text;
+}
+
+function renderList() {
+  const root = $("fileList");
+  GROUPS.forEach(([title, files]) => {
+    const wrap = document.createElement("div");
+    const h = document.createElement("p");
+    h.className = "text-[11px] uppercase tracking-wider text-slate-500 px-2 mb-1";
+    h.textContent = title;
+    wrap.appendChild(h);
+    files.forEach(f => {
+      const b = document.createElement("button");
+      b.className = "file-btn w-full text-left text-[12.5px] font-mono px-2 py-1.5 rounded-md border border-transparent hover:bg-slate-800/70 text-slate-300 truncate";
+      b.textContent = f.split("/").pop();
+      b.title = f;
+      b.dataset.path = f;
+      b.onclick = () => open(f);
+      wrap.appendChild(b);
+    });
+    root.appendChild(wrap);
+  });
+}
+
+async function open(path) {
+  current = path;
+  document.querySelectorAll(".file-btn").forEach(b => b.setAttribute("aria-current", b.dataset.path === path ? "true" : "false"));
+  $("filePath").textContent = path;
+  $("fileMeta").textContent = "загрузка…";
+  try {
+    const text = await load(path);
+    $("code").textContent = text;
+    $("fileMeta").textContent = text.split("\n").length + " строк · " + new Blob([text]).size + " байт";
+  } catch (e) {
+    $("code").textContent = "Не удалось загрузить файл.\n\n" + e.message +
+      "\n\nОткройте страницу через HTTP-сервер из корня проекта (например, python -m http.server), " +
+      "либо возьмите файлы напрямую из каталога проекта: они лежат в нём как обычные файлы.";
+    $("fileMeta").textContent = "ошибка";
+  }
+}
+
+function download(name, blob) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+$("copyBtn").onclick = async () => {
+  if (!current) return;
+  try { await navigator.clipboard.writeText($("code").textContent); $("status").textContent = "Скопировано: " + current; }
+  catch { $("status").textContent = "Буфер обмена недоступен в этом окружении."; }
+};
+$("dlBtn").onclick = () => {
+  if (!current || !cache.has(current)) return;
+  download(current.split("/").pop(), new Blob([cache.get(current)], { type: "text/plain" }));
+};
+$("zipBtn").onclick = async () => {
+  const btn = $("zipBtn");
+  btn.disabled = true;
+  btn.textContent = "Сборка архива…";
+  try {
+    const zip = new JSZip();
+    const root = "geraduo-hypervisor-core-v0.5.0-overlay/";
+    for (const p of ALL) zip.file(root + p, await load(p));
+    zip.file(root + "OVERLAY_NOTES.txt",
+      "Geraduo Hypervisor Core v0.5.0 overlay\n" +
+      "Copy over the dev branch checkout (v0.4.0). Replaces CMakeLists.txt and README.md.\n" +
+      "Requires existing tests/test_support.hpp and tests/fakes/fake_windows_platform.hpp.\n" +
+      "NOT compiled or executed by the author: run cmake/ctest on Windows (VS 2022) before use.\n");
+    download("geraduo-hypervisor-core-v0.5.0-overlay.zip", await zip.generateAsync({ type: "blob", compression: "DEFLATE" }));
+    $("status").textContent = "Архив собран: " + ALL.length + " файлов.";
+  } catch (e) {
+    $("status").textContent = "Не удалось собрать ZIP: " + e.message + " (нужен HTTP-доступ к файлам проекта).";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Скачать ZIP (v0.5.0 overlay)";
+  }
+};
+
+renderList();
+open(ALL[0]);
+</script>
+</body>
 </html>
