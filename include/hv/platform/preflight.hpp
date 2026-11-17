@@ -1,4 +1,5 @@
 #pragma once
+#include "hv/platform/check_status.hpp"
 #include "hv/platform/cpuid.hpp"
 #include "hv/status.hpp"
 #include <cstdint>
@@ -9,8 +10,6 @@ namespace hv {
 
 enum class CpuVendor { Unknown, Intel, Amd, Hygon, Other };
 enum class HypervisorVendor { None, MicrosoftHyperV, Kvm, VMware, Xen, VirtualBox, QemuTcg, Other };
-
-enum class CheckStatus { Pass, Fail, Warn, Info, NotChecked };
 
 // There is intentionally NO "Ready" verdict. A user-mode CPUID preflight cannot prove that VMXON
 // will succeed (IA32_FEATURE_CONTROL, CR0/CR4 fixed bits, firmware and other hypervisors are

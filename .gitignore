@@ -1,4 +1,6 @@
 build/
+build-*/
+build-driver/
 out/
 .vs/
 .vscode/
@@ -8,3 +10,4 @@ out/
 *.ilk
 *.obj
 *.exe
+*.zip
