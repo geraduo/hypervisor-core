@@ -77,7 +77,7 @@ struct VmxCapabilityReport {
     bool hypervisor_present{false};
     bool kernel_verification_required{true};
 
-    // v0.5.0 boundary: no VMXON, VMCS or guest execution.
+    // Current 0.x boundary: no VMXON, VMCS or guest execution.
     bool hardware_vmx_started{false};
     std::vector<PreflightCheck> checks;
 };

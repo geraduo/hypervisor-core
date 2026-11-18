@@ -279,7 +279,7 @@ Result VmxCapabilityManager::EvaluateLocked(const CpuCapabilityReport& cpu,
                       "\" has no implemented virtualization backend. The Intel VT-x "
                       "foundation requires GenuineIntel.";
         AddCheck(out, "vmx.vendor", "Intel CPU vendor", CheckStatus::Fail,
-                 "Vendor=\"" + cpu.vendor_string + "\". AMD-V/SVM is not implemented in v0.5.0.");
+                 "Vendor=\"" + cpu.vendor_string + "\". AMD-V/SVM is not implemented in v0.6.0.");
         last_error_.clear();
         return Result::Ok();
     }

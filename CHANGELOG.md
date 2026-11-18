@@ -4,6 +4,105 @@ All notable changes to Geraduo Hypervisor Core are documented here. The project
 does not claim production readiness, hardware virtualization execution or driver
 runtime validation at any version below.
 
+## v0.6.0 — Software Memory Layer
+
+### Added
+
+- Software memory model in `hv_core`, namespace `hv::memory`, with no hardware
+  EPT or VMX dependency.
+- Strongly typed `GuestVirtualAddress`, `GuestPhysicalAddress`,
+  `HostPhysicalAddress` and `AddressSpaceId`, plus `MemoryStatus`,
+  `MemoryResult`, `TranslationResult`, `Permissions` checks and explicit
+  conversion helpers for the legacy `uint64_t` aliases.
+- `IMemoryBackingProvider` and `FakeMemoryBackingProvider`: real aligned
+  allocations, allocation tracking, byte limits, OOM injection, `Shutdown`,
+  `ReleaseAll` and re-initialization.
+- `GuestAddressSpaceManager`: named address-space contexts, Map/Unmap/Protect/
+  Query/Translate/Enumerate/Clear and context isolation.
+- `GuestMemoryManager`: guest RAM regions, real backing, GPA → HPA translation,
+  permission-checked Read/Write, direct snapshot access, region removal and
+  `ReleaseAll`.
+- `EptPageTable` and typed `EptManager`: four-level PML4/PDPT/PD/PT software
+  hierarchy, 4 KiB/2 MiB/1 GiB pages, mapping ranges, rollback, protection,
+  queries, validation and concurrency.
+- `MemoryMappingManager`: combined GVA → GPA → HPA translation, cross-stage
+  permission intersection, `MapAll`, `UnmapAll`, `ProtectAll`, `Read`, `Write`,
+  `Execute` (permission check only), `Query`, `GetMappingInfo` and validation.
+- `MemorySnapshotManager`: in-memory snapshot creation, metadata, FNV-1a
+  checksum, verification, restore, deletion and a configurable byte limit.
+- `MemoryDiagnostics`: translation/error/permission counters, mapped pages,
+  address spaces, guest regions, mapping ranges, snapshot summaries and JSON
+  export.
+- `hv_memory_demo.exe`: address space, synthetic pages, GPA → HPA, two-stage
+  translation, permission denials, snapshot restore and JSON diagnostics.
+- Tests: `hv_ept_manager_tests`, `hv_guest_memory_tests`,
+  `hv_address_space_tests`, `hv_memory_snapshot_tests` and
+  `hv_memory_integration_tests`.
+- Documentation: `docs/MEMORY_MANAGER.md`, `docs/ADDRESS_TRANSLATION.md`,
+  `docs/EPT_MODEL.md` and `docs/MEMORY_SNAPSHOTS.md`.
+- `hv::MemoryManager` integration constructor taking `hv::memory::EptManager&`.
+
+### Changed
+
+- CMake project version is `0.6.0`; the `hv_memory_demo` and five memory test
+  targets are added to the existing build and CTest registration.
+- `SyntheticPageTable` gains additive `Protect`, `Query`, `Enumerate` and
+  `Clear` operations. Existing Map/Unmap/Translate behavior is unchanged.
+- `MemoryManager` supports both the legacy `NestedPageTable&` second stage and
+  the new typed software `hv::memory::EptManager&` second stage.
+- `Permissions::Allows` is `constexpr`.
+- README, architecture and build documentation describe the software memory
+  layer, the GVA/GPA/HPA model and the hardware boundary.
+
+### Compatibility
+
+- All public v0.5.0 APIs remain available.
+- The legacy `hv::GuestVirtualAddress`, `hv::GuestPhysicalAddress`,
+  `hv::HostPhysicalAddress` and `hv::AddressSpaceId` aliases are unchanged.
+- The legacy flat `hv::NestedPageTable` / `hv::EptManager` remains available;
+  `hv::memory::EptManager` is a separate typed type.
+- Lifecycle, `Hypervisor`, host/guest backends, `ProgramRunner`, platform,
+  VT-x and driver components are unchanged.
+- Driver version remains **0.5.0** intentionally: the driver binary was not
+  changed in v0.6.0. Protocol version 1, the 24-byte request, the 80-byte
+  response and `IOCTL_GERADUO_QUERY_PLATFORM_INFO = 0x00226000` are unchanged.
+
+### Explicitly not included
+
+- Hardware EPT/NPT, EPTP programming, VPID, EPT invalidation, accessed/dirty
+  bits or hardware page-walk behavior.
+- `VMXON` / `VMXOFF`, VMCS creation or access, VM entry/exit, exit handling.
+- Physical-memory access, arbitrary process-memory access, MMIO or DMA.
+- Guest execution, interrupt injection or device emulation.
+- AMD-V/SVM or Windows Hypervisor Platform backends.
+- Disk-backed snapshots, incremental snapshots, compression or encryption.
+- Huge-page splitting/merging in the EPT model.
+- A signed, installed or loaded driver.
+
+### Validation
+
+Validated in the authoring workspace (Windows Server 2025 build
+`10.0.26200.9974`, x64, AMD Ryzen 5 5600 VM under Microsoft Hyper-V):
+
+- Release x64 build with Visual Studio 2026 / MSVC 19.52.37029.0,
+  `/W4 /WX /permissive- /EHsc`, no warnings.
+- `ctest`: 12/12 test executables passed, including all five new memory suites.
+- `hv_memory_demo.exe` completed all five stages and exported
+  `hv_memory_demo_diagnostics.json`; the JSON reports `"model": "software"`
+  and `"hardware_ept": false`.
+- Software two-stage translation, permission denials, snapshot byte/permission
+  restore, OOM handling, corrupt-snapshot rejection and concurrent access are
+  covered by the new tests.
+- The driver binaries from v0.5.0 remain unloaded and untested at runtime.
+
+Not validated:
+
+- No hardware VT-x execution and no hardware EPT were tested; no Intel host was
+  available.
+- The driver was not signed, installed, loaded or IOCTL-tested.
+- The requested Visual Studio 2022 generator was unavailable; Visual Studio 18
+  2026 was used.
+
 ## v0.5.0 — Intel VT-x Virtualization Foundation
 
 ### Added

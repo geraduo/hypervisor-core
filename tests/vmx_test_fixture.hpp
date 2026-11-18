@@ -1,6 +1,6 @@
 #pragma once
 
-// Shared deterministic fixtures for the v0.5.0 VT-x test executables. Every
+// Shared deterministic fixtures for the v0.6.0 VT-x test executables. Every
 // provider is a fake: no CPUID instruction, Win32 call or driver IOCTL runs.
 
 #include "hv/platform/fake_compatibility_environment.hpp"

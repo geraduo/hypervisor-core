@@ -2,8 +2,8 @@
 
 ## Scope
 
-v0.5.0 adds a **user-mode readiness model** for an Intel VT-x foundation. It
-answers one question:
+v0.5.0 introduced and v0.6.0 retains a **user-mode readiness model** for an
+Intel VT-x foundation. It answers one question:
 
 > Can a later kernel-stage implementation be reviewed against the evidence
 > collected here?
@@ -188,7 +188,7 @@ false and the detail says `NOT_CHECKED`; the report never invents a value.
 - Every transition increments `generation`; only successful evaluations
   increment `successful_evaluations`.
 - `hardware_vmx_started` and `hardware_start_supported` are always false, and
-  `HardwareVmxStarted()` returns false for the whole lifetime of v0.5.0.
+  `HardwareVmxStarted()` returns false for the whole 0.x line.
 
 All transitions and readers are serialized with a mutex. The controller owns no
 global or static virtualization state, so multiple instances are independent.

@@ -39,9 +39,9 @@ machine for this release did **not** have VS2022; it used the installed
 Visual Studio 2026 generator:
 
 ```bat
-cmake -S . -B build-v050 -G "Visual Studio 18 2026" -A x64
-cmake --build build-v050 --config Release
-ctest --test-dir build-v050 -C Release --output-on-failure
+cmake -S . -B build-v060 -G "Visual Studio 18 2026" -A x64
+cmake --build build-v060 --config Release
+ctest --test-dir build-v060 -C Release --output-on-failure
 ```
 
 Substitute the generator that matches your installation. If you use a
@@ -61,8 +61,14 @@ build\Release\hv_launch.exe
 build\Release\hv_preflight.exe
 build\Release\hv_platform_diagnostics.exe
 build\Release\hv_vmx_diagnostics.exe
+build\Release\hv_memory_demo.exe
 build\Release\hv_tests.exe
 build\Release\hv_preflight_tests.exe
+build\Release\hv_ept_manager_tests.exe
+build\Release\hv_guest_memory_tests.exe
+build\Release\hv_address_space_tests.exe
+build\Release\hv_memory_snapshot_tests.exe
+build\Release\hv_memory_integration_tests.exe
 build\Release\hv_windows_platform_tests.exe
 build\Release\hv_platform_compatibility_tests.exe
 build\Release\hv_vmx_capability_tests.exe
@@ -77,8 +83,9 @@ build\Release\hv_vmx_lifecycle_tests.exe
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `HV_BUILD_TESTS` | `ON` | Build and register the test executables (seven in this release) |
+| `HV_BUILD_TESTS` | `ON` | Build and register the test executables (twelve in this release) |
 | `HV_BUILD_DEMO` | `ON` | Build the existing architecture demo |
+| `HV_BUILD_MEMORY_DEMO` | `ON` | Build the `hv_memory_demo.exe` software memory model demonstration |
 | `HV_BUILD_LAUNCHER` | `ON` | Build the existing host process launcher |
 | `HV_BUILD_PREFLIGHT` | `ON` | Build the existing `hv_preflight` CPUID tool |
 | `HV_BUILD_WINDOWS_PLATFORM` | `ON` | Build the `hv_platform` library and platform tests |
@@ -122,6 +129,11 @@ The driver project independently uses `/W4` and treats warnings as errors.
 | --- | --- |
 | `hv_tests` | Original lifecycle, translation and program-runner tests |
 | `hv_preflight_tests` | Original CPUID preflight tests |
+| `hv_ept_manager_tests` | Software EPT 4 KiB/2 MiB/1 GiB mapping, translation, conflicts, ranges, rollback, validation, concurrency, `MemoryManager` integration |
+| `hv_guest_memory_tests` | Guest regions, backing allocations, read/write, permissions, removal, OOM, provider lifecycle |
+| `hv_address_space_tests` | Address-space lifecycle, map/unmap/protect, offset translation, isolation, two-stage access, permission layers, concurrency |
+| `hv_memory_snapshot_tests` | Snapshot creation, metadata, checksum, restore, corruption, limits and lifecycle |
+| `hv_memory_integration_tests` | `MemoryManager` + typed EPT, diagnostics/JSON, permission intersection, concurrent access and snapshot round-trip |
 | `hv_windows_platform_tests` | Platform backend, CPU manager, protocol, missing driver, reconnect, malformed/version-mismatched responses, diagnostics journal, fakes |
 | `hv_platform_compatibility_tests` | Hypervisor environments, VBS/HVCI, WHPX, CPU precedence, formatting |
 | `hv_vmx_capability_tests` | Intel VMX capability, per-processor coverage, `NOT_CHECKED`, malformed reports, JSON/text formatting |
@@ -131,14 +143,35 @@ The driver project independently uses `/W4` and treats warnings as errors.
 Run one test verbosely:
 
 ```bat
-ctest --test-dir build -C Release -R hv_vmx_lifecycle_tests --output-on-failure
+ctest --test-dir build -C Release -R hv_memory_snapshot_tests --output-on-failure
 ```
 
 Run a test executable directly to see every individual check:
 
 ```bat
-build\Release\hv_vmx_lifecycle_tests.exe
+build\Release\hv_memory_snapshot_tests.exe
 ```
+
+## Running the memory demo
+
+```bat
+build\Release\hv_memory_demo.exe
+build\Release\hv_memory_demo.exe my_diagnostics.json
+```
+
+The demo uses only synthetic data and the software memory model. It:
+
+1. creates an address space;
+2. registers a guest-physical region with real backing;
+3. maps synthetic pages through both stages;
+4. prints a GVA -> GPA -> HPA translation;
+5. demonstrates read-only and execute-permission denials;
+6. creates a snapshot, modifies memory directly, restores the snapshot and
+   verifies the bytes and permissions;
+7. refreshes diagnostics and exports JSON.
+
+The default output file is `hv_memory_demo_diagnostics.json` in the current
+working directory.
 
 ## Running the VT-x diagnostics
 
@@ -242,12 +275,16 @@ On the authoring machine:
 - Windows Server 2025, build 10.0.26200.9974, x64.
 - Visual Studio 18 2026 generator, MSVC 19.52.37029.0.
 - Release x64, `/W4 /WX /permissive- /EHsc`, no warnings.
-- `ctest`: 7/7 passed.
+- `ctest`: 12/12 passed, including the five v0.6.0 memory suites.
+- `hv_memory_demo.exe` completed all stages, exported
+  `hv_memory_demo_diagnostics.json`, and the JSON reported
+  `"model": "software"` and `"hardware_ept": false`.
 - `hv_vmx_diagnostics.exe` text and JSON output; JSON parsed with
   `ConvertFrom-Json`.
 - The host is an AMD Ryzen 5 5600 VM under Microsoft Hyper-V, so the correct
-  verdict is `NotSupported`/`UnsupportedCpuVendor` with
-  `hardware_vmx_started=false`.
+  VT-x verdict is `NotSupported`/`UnsupportedCpuVendor` with
+  `hardware_vmx_started=false`. The software memory model does not require
+  Intel hardware.
 
 ## Clean rebuild
 

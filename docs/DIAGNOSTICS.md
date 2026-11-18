@@ -45,7 +45,7 @@ Page size: 4096
 Physical memory: 17102315520 bytes
 Capabilities:
   [PASS] Windows 10/11 or later - Windows Server 2025 10.0.26200.0 is supported.
-  [WARN] Client Windows edition - Windows Server was detected; v0.5.0 validates Windows 10/11 client x64.
+  [WARN] Client Windows edition - Windows Server was detected; v0.6.0 validates Windows 10/11 client x64.
   ...
   [NOT CHECKED] Virtualization firmware state - IA32_FEATURE_CONTROL, CR0/CR4 fixed bits and VMX capability MSRs require kernel mode.
 ```
@@ -71,7 +71,7 @@ Preflight verdict: UnsupportedPlatform
 Summary: CPU vendor "AuthenticAMD" has no implemented virtualization backend.
 ```
 
-This is the correct, honest result: no AMD-V/SVM backend exists in v0.5.0.
+This is the correct, honest result: no AMD-V/SVM backend exists in v0.6.0.
 
 ### Compatibility
 
@@ -108,8 +108,8 @@ When connected, the section prints the driver response and the journal. See
 
 ## VT-x diagnostics (`hv_vmx_diagnostics.exe`)
 
-v0.5.0 adds a second CLI that composes the VT-x capability, readiness,
-lifecycle and journal layers:
+v0.5.0 introduced a second CLI that composes the VT-x capability, readiness,
+lifecycle and journal layers; v0.6.0 keeps it unchanged:
 
 ```bat
 build\Release\hv_vmx_diagnostics.exe

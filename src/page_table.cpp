@@ -22,6 +22,44 @@ Result SyntheticPageTable::Unmap(GuestVirtualAddress virtual_page) {
     return Result::Ok();
 }
 
+Result SyntheticPageTable::Protect(GuestVirtualAddress virtual_page, Permissions permissions) {
+    if ((virtual_page & (kPageSize - 1)) != 0)
+        return Result::Error(Status::InvalidArgument, "Virtual page must be aligned");
+    std::lock_guard lock(mutex_);
+    const auto it = mappings_.find(virtual_page);
+    if (it == mappings_.end())
+        return Result::Error(Status::NotMapped, "Guest virtual page is not mapped");
+    it->second.permissions = permissions;
+    return Result::Ok();
+}
+
+Result SyntheticPageTable::Query(GuestVirtualAddress virtual_page, GuestPageMapping& out) const {
+    if ((virtual_page & (kPageSize - 1)) != 0)
+        return Result::Error(Status::InvalidArgument, "Virtual page must be aligned");
+    std::lock_guard lock(mutex_);
+    const auto it = mappings_.find(virtual_page);
+    if (it == mappings_.end())
+        return Result::Error(Status::NotFound, "Guest virtual page is not mapped");
+    out = it->second;
+    return Result::Ok();
+}
+
+std::vector<GuestPageMappingInfo> SyntheticPageTable::Enumerate() const {
+    std::lock_guard lock(mutex_);
+    std::vector<GuestPageMappingInfo> result;
+    result.reserve(mappings_.size());
+    for (const auto& [virtual_page, mapping] : mappings_) {
+        result.push_back(GuestPageMappingInfo{virtual_page, mapping.guest_page,
+                                              mapping.permissions});
+    }
+    return result;
+}
+
+void SyntheticPageTable::Clear() {
+    std::lock_guard lock(mutex_);
+    mappings_.clear();
+}
+
 TranslationStatus SyntheticPageTable::Translate(GuestVirtualAddress address, Access access,
                                                  GuestPhysicalAddress& out) const {
     const auto page = address & kPageMask;

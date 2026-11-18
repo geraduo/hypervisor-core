@@ -266,7 +266,7 @@ Result PlatformCompatibilityManager::Evaluate(CompatibilityReport& out) {
         AddCheck(out, "compatibility.hypervisor", "Virtualization conflict detection",
                  CheckStatus::Warn,
                  "A third-party hypervisor is reported. Running as a nested guest is not validated "
-                 "by v0.5.0.");
+                 "by v0.6.0.");
         break;
     case HypervisorEnvironment::Unrecognized:
         AddCheck(out, "compatibility.hypervisor", "Virtualization conflict detection",

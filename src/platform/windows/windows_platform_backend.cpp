@@ -376,7 +376,7 @@ void WindowsPlatformBackend::BuildCapabilitiesLocked() {
                                                                   ? CheckStatus::Warn
                                                                   : CheckStatus::Pass,
         snapshot_.is_windows_server
-            ? "Windows Server was detected; v0.5.0 validates Windows 10/11 client x64."
+            ? "Windows Server was detected; v0.6.0 validates Windows 10/11 client x64."
             : "A client Windows edition was reported.");
 
     if (snapshot_.native_architecture == PlatformArchitecture::X64) {
@@ -385,7 +385,7 @@ void WindowsPlatformBackend::BuildCapabilitiesLocked() {
     } else {
         Add(report_, "os.architecture", "Native x64 architecture", CheckStatus::Fail,
             std::string("Native architecture is ") + ToString(snapshot_.native_architecture) +
-                "; Geraduo v0.5.0 supports x64 only.");
+                "; Geraduo v0.6.0 supports x64 only.");
     }
 
     const bool process_is_x64 =

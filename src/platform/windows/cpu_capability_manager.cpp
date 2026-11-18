@@ -191,7 +191,7 @@ Result CpuCapabilityManager::Probe(CpuCapabilityReport& out) {
         AddCheck(out, "cpu.vendor_backend", "Vendor-specific virtualization backend",
                  CheckStatus::Info,
                  "Brand \"" + out.brand_string + "\" is recorded for diagnostics only; no AMD-V/SVM "
-                 "backend is implemented in v0.5.0.");
+                 "backend is implemented in v0.6.0.");
     }
 
     last_error_.clear();

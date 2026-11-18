@@ -476,10 +476,10 @@ Result VmxReadinessManager::EvaluateLocked(const VmxCapabilityReport& capability
              "VMX capability MSRs and CR0/CR4 fixed bits", CheckStatus::NotChecked,
              "Requires privileged MSR and control-register access; not verified.");
     AddCheck(out, "readiness.kernel.ept_vpid", "EPT/VPID capability MSRs", CheckStatus::NotChecked,
-             "Requires RDMSR; hardware EPT is out of scope for v0.5.0.");
+             "Requires RDMSR; hardware EPT is out of scope for v0.6.0.");
     AddCheck(out, "readiness.kernel.vmxon", "VMXON, VMCS, VM-entry and VM-exit",
              CheckStatus::NotChecked,
-             "Not implemented in v0.5.0. No VMXON, VMCS, guest entry or exit was attempted.");
+             "Not implemented in v0.6.0. No VMXON, VMCS, guest entry or exit was attempted.");
     AddCheck(out, "readiness.boundary", "Hardware virtualization boundary", CheckStatus::Info,
              "The virtualization foundation is read-only. It never accesses physical memory, "
              "another process, an MSR or a VMX instruction.");

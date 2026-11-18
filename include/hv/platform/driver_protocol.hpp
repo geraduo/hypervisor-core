@@ -1,6 +1,11 @@
 #pragma once
 
-// Shared user-mode <-> kernel-mode diagnostic protocol for Geraduo v0.5.0.
+// Shared user-mode <-> kernel-mode diagnostic protocol for Geraduo Hypervisor
+// Core v0.6.0.
+//
+// The diagnostic driver was not changed in v0.6.0, so the driver version
+// constants below intentionally remain 0.5.0. Protocol version 1, the 24-byte
+// request, the 80-byte response and the IOCTL code are unchanged.
 //
 // This header is deliberately free of Windows.h, STL containers, exceptions and
 // allocations so that it can be compiled both by the user-mode library and by the

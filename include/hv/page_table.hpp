@@ -3,10 +3,17 @@
 #include "hv/types.hpp"
 #include <map>
 #include <mutex>
+#include <vector>
 
 namespace hv {
 
 struct GuestPageMapping {
+    GuestPhysicalAddress guest_page{};
+    Permissions permissions{};
+};
+
+struct GuestPageMappingInfo {
+    GuestVirtualAddress virtual_page{};
     GuestPhysicalAddress guest_page{};
     Permissions permissions{};
 };
@@ -17,6 +24,12 @@ public:
                              GuestPhysicalAddress guest_page,
                              Permissions permissions = {});
     [[nodiscard]] Result Unmap(GuestVirtualAddress virtual_page);
+    // Additive v0.6.0 helpers.  They preserve the pre-0.6.0 Map/Unmap/Translate
+    // behaviour and are used by the typed address-space layer.
+    [[nodiscard]] Result Protect(GuestVirtualAddress virtual_page, Permissions permissions);
+    [[nodiscard]] Result Query(GuestVirtualAddress virtual_page, GuestPageMapping& out) const;
+    [[nodiscard]] std::vector<GuestPageMappingInfo> Enumerate() const;
+    void Clear();
     [[nodiscard]] TranslationStatus Translate(GuestVirtualAddress address, Access access,
                                                GuestPhysicalAddress& out) const;
     [[nodiscard]] std::size_t MappingCount() const;

@@ -418,7 +418,7 @@ void TestDiagnosticsFormatting() {
     const std::string json = hv::FormatVmxDiagnosticsJson(report);
     Check(json.find("\"schema\": \"geraduo.vmx.diagnostics.v1\"") != std::string::npos,
           "diagnostics JSON: schema is serialized");
-    Check(json.find("\"tool_version\": \"0.5.0\"") != std::string::npos,
+    Check(json.find("\"tool_version\": \"0.6.0\"") != std::string::npos,
           "diagnostics JSON: tool version is serialized");
     Check(json.find("backend detail: \\\"quoted\\\" \\\\ slash\\n") != std::string::npos,
           "diagnostics JSON: backend detail is escaped");
@@ -439,7 +439,7 @@ void TestDiagnosticsFormatting() {
           "diagnostics JSON: privileged instruction boundary is false");
 
     const std::string text = hv::FormatVmxDiagnosticsText(report);
-    Check(text.find("Geraduo Hypervisor Core v0.5.0 VT-x diagnostics") != std::string::npos,
+    Check(text.find("Geraduo Hypervisor Core v0.6.0 VT-x diagnostics") != std::string::npos,
           "diagnostics text: release header is present");
     Check(text.find("Diagnostic journal (1 events)") != std::string::npos,
           "diagnostics text: journal is present");

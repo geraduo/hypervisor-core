@@ -2,7 +2,7 @@
 
 // Transactional lifecycle controller for the Intel VT-x foundation.
 //
-// The controller is the concrete IVirtualizationBackend of v0.5.0. It owns no
+// The controller is the concrete IVirtualizationBackend since v0.5.0. It owns no
 // global state, serializes all transitions with a mutex and rolls back a failed
 // Refresh() to the previous committed state. It never executes VMXON.
 

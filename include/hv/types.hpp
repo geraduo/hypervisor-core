@@ -18,7 +18,7 @@ struct Permissions {
     bool write{true};
     bool execute{false};
 
-    [[nodiscard]] bool Allows(Access access) const noexcept {
+    [[nodiscard]] constexpr bool Allows(Access access) const noexcept {
         switch (access) {
         case Access::Read: return read;
         case Access::Write: return write;

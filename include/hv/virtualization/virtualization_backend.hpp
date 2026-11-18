@@ -2,10 +2,11 @@
 
 // Platform-neutral interface of the future hardware virtualization backend.
 //
-// v0.5.0 is a foundation release. The only implementation is
-// VmxLifecycleController, which manages diagnostic states. No implementation
-// may execute VMXON in this release; HardwareVmxStarted() is therefore a
-// constant false and is part of the contract, not a status flag.
+// v0.5.0 introduced this foundation and v0.6.0 keeps the same boundary. The
+// only implementation is VmxLifecycleController, which manages diagnostic
+// states. No implementation may execute VMXON in the 0.x line;
+// HardwareVmxStarted() is therefore a constant false and is part of the
+// contract, not a status flag.
 
 #include "hv/virtualization/vmx_status.hpp"
 
@@ -36,7 +37,8 @@ struct VirtualizationBackendStatus {
     bool last_transition_failed{false};
     std::string last_transition_error;
 
-    // Hard boundary of v0.5.0. Both fields stay false in every code path.
+    // Hard boundary of the 0.x line (v0.5.0 and v0.6.0). Both fields stay
+    // false in every code path.
     bool hardware_vmx_started{false};
     bool hardware_start_supported{false};
 };
@@ -49,8 +51,8 @@ public:
     [[nodiscard]] virtual VirtualizationBackendState GetState() const = 0;
     [[nodiscard]] virtual VirtualizationBackendStatus GetStatus() const = 0;
 
-    // Must remain false for the whole lifetime of v0.5.0. A future hardware
-    // backend may override it only when VMXON has actually succeeded.
+    // Must remain false for the whole 0.x line. A future hardware backend may
+    // override it only when VMXON has actually succeeded.
     [[nodiscard]] virtual bool HardwareVmxStarted() const noexcept = 0;
 };
 

@@ -1,6 +1,6 @@
 # Unsupported Features and Safety Boundaries
 
-v0.5.0 is a diagnostic and foundation release. The following are **not
+v0.6.0 is a software-memory and diagnostic release. The following are **not
 implemented**, and none of them are simulated in a way that could be mistaken
 for a working implementation.
 
@@ -12,7 +12,7 @@ for a working implementation.
 | VMCS allocation, loading, clearing | Not implemented | No VMCS structure exists |
 | VM entry / VM exit | Not implemented | No guest is launched |
 | VM-exit reason handling | Not implemented | No exit handler exists |
-| Hardware EPT | Not implemented | `EptManager` is a software abstraction only |
+| Hardware EPT | Not implemented | `hv::memory::EptManager` is a four-level software model only |
 | Hardware NPT | Not implemented | `NptManager` is a software abstraction only |
 | VPID / EPT TLB invalidation | Not implemented | No `INVEPT` / `INVVPID` |
 | MSR bitmaps / I/O bitmaps | Not implemented | No VMCS controls |
@@ -58,15 +58,15 @@ It accepts no pointer, address, size, path, process id, MSR number or command
 payload. There is no write operation. It uses `METHOD_BUFFERED` only and rejects
 all other IOCTLs.
 
-The driver was not extended for v0.5.0. It remains a read-only diagnostic query
-and reports version 0.5.0.
+The driver was not extended for v0.5.0 or v0.6.0. It remains a read-only
+diagnostic query and reports version 0.5.0.
 
 ## Evidence and validation gaps
 
 | Item | Status |
 | --- | --- |
 | User-mode build | Built and tested with Visual Studio 2026 / MSVC 19.52.37029.0 x64 |
-| User-mode tests | Seven test executables, 7/7 passed |
+| User-mode tests | Twelve test executables, 12/12 passed |
 | `hv_vmx_diagnostics.exe` | Text and JSON modes executed on the authoring host; JSON parsed |
 | Real Intel VT-x hardware | Not available; no `Supported`/`ReadyForReview` hardware run |
 | Requested VS2022 generator | Not available on the authoring machine; not exercised |
@@ -108,6 +108,7 @@ Implementing a correct hypervisor requires:
 - robust teardown on every failure path;
 - kernel debugging and hardware validation.
 
-v0.5.0 deliberately provides a verifiable capability/readiness/lifecycle
+The 0.x line deliberately provides a verifiable capability/readiness/lifecycle
 structure, protocol validation and a safe read-only driver interface as the
-foundation for that work. It does not pretend the later stages are complete.
+foundation for that work. v0.6.0 adds a software-only memory model for research,
+tests and diagnostics; it does not pretend the hardware stages are complete.

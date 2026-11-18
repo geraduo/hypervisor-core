@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
-project(GeraduoHypervisorCore VERSION 0.5.0 LANGUAGES CXX)
+project(GeraduoHypervisorCore VERSION 0.6.0 LANGUAGES CXX)
 
 option(HV_BUILD_TESTS "Build unit tests" ON)
 option(HV_BUILD_DEMO "Build the architecture demo" ON)
+option(HV_BUILD_MEMORY_DEMO "Build the hv_memory_demo memory model demonstration" ON)
 option(HV_BUILD_LAUNCHER "Build the host process launcher" ON)
 option(HV_BUILD_PREFLIGHT "Build the hv_preflight CPUID report tool" ON)
 option(HV_BUILD_WINDOWS_PLATFORM "Build the Windows Platform Backend library" ON)
@@ -24,6 +25,15 @@ add_library(hv_core
     src/page_table.cpp
     src/nested_paging.cpp
     src/memory_manager.cpp
+    src/memory/address_types.cpp
+    src/memory/memory_backing_provider.cpp
+    src/memory/ept_page_table.cpp
+    src/memory/ept_manager.cpp
+    src/memory/address_space_manager.cpp
+    src/memory/guest_memory_manager.cpp
+    src/memory/memory_mapping_manager.cpp
+    src/memory/memory_snapshot_manager.cpp
+    src/memory/memory_diagnostics.cpp
     src/hypervisor.cpp
     src/diagnostics.cpp
     src/program_runner.cpp
@@ -82,6 +92,12 @@ if(HV_BUILD_DEMO)
     target_link_libraries(hv_demo PRIVATE hv_core)
 endif()
 
+if(HV_BUILD_MEMORY_DEMO)
+    add_executable(hv_memory_demo examples/memory_demo.cpp)
+    target_link_libraries(hv_memory_demo PRIVATE hv_core)
+    hv_set_warnings(hv_memory_demo)
+endif()
+
 if(HV_BUILD_LAUNCHER)
     add_executable(hv_launch examples/launch.cpp)
     target_link_libraries(hv_launch PRIVATE hv_core)
@@ -131,6 +147,31 @@ if(HV_BUILD_TESTS)
     target_link_libraries(hv_preflight_tests PRIVATE hv_core)
     hv_set_warnings(hv_preflight_tests)
     add_test(NAME hv_preflight_tests COMMAND hv_preflight_tests)
+
+    add_executable(hv_ept_manager_tests tests/test_ept_manager.cpp)
+    target_link_libraries(hv_ept_manager_tests PRIVATE hv_core Threads::Threads)
+    hv_set_warnings(hv_ept_manager_tests)
+    add_test(NAME hv_ept_manager_tests COMMAND hv_ept_manager_tests)
+
+    add_executable(hv_guest_memory_tests tests/test_guest_memory.cpp)
+    target_link_libraries(hv_guest_memory_tests PRIVATE hv_core Threads::Threads)
+    hv_set_warnings(hv_guest_memory_tests)
+    add_test(NAME hv_guest_memory_tests COMMAND hv_guest_memory_tests)
+
+    add_executable(hv_address_space_tests tests/test_address_space.cpp)
+    target_link_libraries(hv_address_space_tests PRIVATE hv_core Threads::Threads)
+    hv_set_warnings(hv_address_space_tests)
+    add_test(NAME hv_address_space_tests COMMAND hv_address_space_tests)
+
+    add_executable(hv_memory_snapshot_tests tests/test_memory_snapshots.cpp)
+    target_link_libraries(hv_memory_snapshot_tests PRIVATE hv_core Threads::Threads)
+    hv_set_warnings(hv_memory_snapshot_tests)
+    add_test(NAME hv_memory_snapshot_tests COMMAND hv_memory_snapshot_tests)
+
+    add_executable(hv_memory_integration_tests tests/test_memory_integration.cpp)
+    target_link_libraries(hv_memory_integration_tests PRIVATE hv_core Threads::Threads)
+    hv_set_warnings(hv_memory_integration_tests)
+    add_test(NAME hv_memory_integration_tests COMMAND hv_memory_integration_tests)
 
     if(HV_BUILD_WINDOWS_PLATFORM)
         add_executable(hv_windows_platform_tests tests/test_windows_platform.cpp)

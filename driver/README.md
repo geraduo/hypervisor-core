@@ -1,7 +1,8 @@
 # GeraduoDriver
 
-This directory contains the **optional** WDK diagnostic kernel driver for
-Geraduo Hypervisor Core v0.5.0. It is not part of the user-mode library and is
+This directory contains the **optional** WDK diagnostic kernel driver shipped
+with Geraduo Hypervisor Core v0.6.0. The driver binary itself is unchanged from
+v0.5.0. It is not part of the user-mode library and is
 not required to build or run `hv_platform_diagnostics.exe` or
 `hv_vmx_diagnostics.exe`.
 
@@ -17,9 +18,10 @@ EPT/NPT structures, read or write arbitrary physical memory, access another
 process, hide itself, or bypass anti-cheat software.
 
 The protocol version remains `1`, the request remains 24 bytes and the response
-remains 80 bytes. The driver now reports version `0.5.0`; the user-mode
-readiness layer accepts `0.4.x` and newer. The v0.5.0 driver source is the
-v0.4.0 diagnostic source with the reported version updated.
+remains 80 bytes. The driver still reports version `0.5.0`; the user-mode
+readiness layer accepts `0.4.x` and newer. The driver source is the v0.4.0
+diagnostic source with the reported version updated to 0.5.0; it was not
+changed in v0.6.0.
 
 ## Security properties
 

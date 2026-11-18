@@ -142,7 +142,7 @@ std::string FormatVirtualizationBackendStatusJson(const VirtualizationBackendSta
 
 std::string FormatVmxDiagnosticsText(const VmxDiagnosticsReport& report) {
     std::ostringstream out;
-    out << "=== Geraduo Hypervisor Core v0.5.0 VT-x diagnostics ===\n";
+    out << "=== Geraduo Hypervisor Core v0.6.0 VT-x diagnostics ===\n";
     out << FormatVirtualizationBackendStatusText(report.backend) << '\n';
     out << FormatVmxCapabilityReportText(report.capability) << '\n';
     out << FormatVmxReadinessReportText(report.readiness) << '\n';
@@ -160,7 +160,7 @@ std::string FormatVmxDiagnosticsJson(const VmxDiagnosticsReport& report) {
     std::ostringstream out;
     out << "{\n";
     out << "  \"schema\": \"geraduo.vmx.diagnostics.v1\",\n";
-    out << "  \"tool_version\": \"0.5.0\",\n";
+    out << "  \"tool_version\": \"0.6.0\",\n";
     out << "  \"backend\": " << FormatVirtualizationBackendStatusJson(report.backend) << ",\n";
     out << "  \"capability\": " << FormatVmxCapabilityReportJson(report.capability) << ",\n";
     out << "  \"readiness\": " << FormatVmxReadinessReportJson(report.readiness) << ",\n";
